@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Prompt Template Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb; /* Tailwind gray-50 - very light gray */
+        }
+        /* Custom scrollbar for webkit browsers */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e5e7eb; /* Tailwind gray-200 */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #9ca3af; /* Tailwind gray-400 */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280; /* Tailwind gray-500 */
+        }
+        .form-input, .form-select, .form-textarea {
+            @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
+            /* Standard rounded-md, blue focus ring */
+        }
+        .form-label {
+            @apply block text-sm font-medium text-gray-700 mb-1;
+        }
+        .btn {
+            @apply inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-150 ease-in-out;
+        }
+        .btn-primary-app { /* Blue primary button */
+            @apply bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500;
+        }
+        .btn-secondary-app { /* Light gray secondary button */
+            @apply bg-gray-200 hover:bg-gray-300 text-gray-700 focus:ring-gray-400 border-gray-300;
+        }
+        .btn-icon-text { /* For buttons with icons */
+            @apply space-x-2;
+        }
+        .content-card { /* Common style for main content blocks */
+            @apply bg-white p-6 sm:p-8 rounded-lg shadow border border-gray-200;
+            /* Flatter shadow, rounded-lg */
+        }
+        .prompt-card { /* Style for individual saved prompt cards */
+            @apply bg-white shadow-sm hover:shadow-md rounded-lg p-4 mb-3 border border-gray-200 transition-all duration-200 ease-in-out flex justify-between items-center;
+            /* Simpler, flatter card */
+        }
+        .prompt-card-loaded { /* Highlight for loaded prompt */
+            @apply ring-2 ring-blue-500 border-blue-400;
+        }
+        .btn-card-action { /* Style for buttons on cards like "View & Load" */
+            @apply bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-md focus:ring-gray-400 border border-gray-300;
+        }
+        #messageContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            width: 320px;
+        }
+        .message {
+            @apply px-4 py-3 mb-3 rounded-md shadow-lg text-white text-sm font-medium;
+        }
+        .message-success { @apply bg-green-500; }
+        .message-error { @apply bg-red-500; }
+        .message-info { @apply bg-blue-500; }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="container mx-auto p-4 md:p-6 lg:p-8 min-h-screen flex flex-col">
+        <header class="mb-8 md:mb-12 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">AI Prompt Template Generator</h1>
+            <p class="text-gray-600 mt-2 text-base">Craft, store, and reuse your AI prompt templates with ease.</p>
+        </header>
+
+        <div id="messageContainer"></div>
+
+        <main class="flex-grow">
+            <div class="flex flex-col md:flex-row gap-6 lg:gap-8">
+                <div class="md:w-2/3 lg:w-7/12 space-y-6">
+                    <form id="promptForm" class="content-card">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-6">Define Your Application</h2>
+
+                        <div>
+                            <label for="appType" class="form-label">Application Type/Name <span class="text-red-500">*</span></label>
+                            <input type="text" id="appType" name="appType" class="form-input" placeholder="e.g., My Awesome App" required>
+                        </div>
+
+                        <div class="mt-4">
+                            <label for="appObjective" class="form-label">Main Objective</label>
+                            <input type="text" id="appObjective" name="appObjective" class="form-input" placeholder="e.g., A tool to manage daily tasks and boost productivity.">
+                        </div>
+
+                        <div class="mt-4">
+                            <label for="programmingLanguage" class="form-label">Programming Language <span class="text-red-500">*</span></label>
+                            <input type="text" id="programmingLanguage" name="programmingLanguage" class="form-input" list="languages" placeholder="e.g., Python, JavaScript, Java" required>
+                            <datalist id="languages">
+                                <option value="JavaScript"></option> <option value="Python"></option> <option value="Java"></option> <option value="Go"></option> <option value="Rust"></option> <option value="TypeScript"></option> <option value="C#"></option> <option value="PHP"></option> <option value="Swift"></option> <option value="Kotlin"></option>
+                            </datalist>
+                        </div>
+
+                        <div class="mt-4">
+                            <label for="frameworks" class="form-label">Framework(s)</label>
+                            <input type="text" id="frameworks" name="frameworks" class="form-input" list="frameworksList" placeholder="e.g., React, Django, Spring Boot">
+                            <datalist id="frameworksList">
+                                <option value="React"></option> <option value="Vue.js"></option> <option value="Angular"></option> <option value="Next.js"></option> <option value="Django"></option> <option value="Flask"></option> <option value="Spring Boot"></option> <option value="Express.js"></option> <option value="Ruby on Rails"></option>
+                            </datalist>
+                        </div>
+
+                        <div class="mt-4">
+                            <label for="libraries" class="form-label">Key Libraries/Packages</label>
+                            <input type="text" id="libraries" name="libraries" class="form-input" placeholder="Comma-separated, e.g., Redux, NumPy, Pandas">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <label for="minFiles" class="form-label">Min Files <span class="text-red-500">*</span></label>
+                                <input type="number" id="minFiles" name="minFiles" class="form-input" min="1" value="1" required>
+                            </div>
+                            <div>
+                                <label for="maxFiles" class="form-label">Max Files <span class="text-red-500">*</span></label>
+                                <input type="number" id="maxFiles" name="maxFiles" class="form-input" min="1" value="5" required>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <label for="database" class="form-label">Database</label>
+                            <input type="text" id="database" name="database" class="form-input" list="databasesList" placeholder="e.g., PostgreSQL, MongoDB, SQLite">
+                            <datalist id="databasesList">
+                                <option value="PostgreSQL"></option> <option value="MySQL"></option> <option value="MongoDB"></option> <option value="SQLite"></option> <option value="Firestore"></option> <option value="Redis"></option> <option value="None"></option>
+                            </datalist>
+                        </div>
+
+                        <div class="mt-4">
+                            <label for="keyFeatures" class="form-label">Key Features (one per line)</label>
+                            <textarea id="keyFeatures" name="keyFeatures" rows="3" class="form-textarea" placeholder="e.g., User authentication&#10;Task creation and deletion&#10;Progress tracking"></textarea>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <label for="uiUxStyle" class="form-label">UI/UX Style</label>
+                                <select id="uiUxStyle" name="uiUxStyle" class="form-select">
+                                    <option value="Minimalist">Minimalist</option> <option value="Modern">Modern</option> <option value="Professional/Corporate">Professional/Corporate</option> <option value="Neumorphic">Neumorphic</option> <option value="Skeuomorphic">Skeuomorphic</option> <option value="Not Specified">Not Specified</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="targetAudience" class="form-label">Target Audience</label>
+                                <input type="text" id="targetAudience" name="targetAudience" class="form-input" placeholder="e.g., Developers, Students">
+                            </div>
+                            <div>
+                                <label for="deploymentTarget" class="form-label">Deployment Target</label>
+                                <select id="deploymentTarget" name="deploymentTarget" class="form-select">
+                                    <option value="Vercel/Netlify">Vercel/Netlify</option> <option value="Docker Container">Docker Container</option> <option value="AWS Lambda">AWS Lambda</option> <option value="Google Cloud Run">Google Cloud Run</option> <option value="Bare Metal Server">Bare Metal Server</option> <option value="Not Specified">Not Specified</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="outputFormat" class="form-label">Desired Output Format</label>
+                                <select id="outputFormat" name="outputFormat" class="form-select">
+                                    <option value="Complete Source Code">Complete Source Code</option> <option value="Detailed Technical Plan">Detailed Technical Plan</option> <option value="File-by-File Breakdown">File-by-File Breakdown</option> <option value="High-level Architecture Overview">High-level Architecture Overview</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="commentStyle" class="form-label">Code Commenting Style</label>
+                                <select id="commentStyle" name="commentStyle" class="form-select">
+                                    <option value="Standard (Explain complex parts)">Standard (Explain complex parts)</option> <option value="Exhaustive (Explain every function)">Exhaustive (Explain every function)</option> <option value="Minimal (Block comments only)">Minimal (Block comments only)</option> <option value="None">None</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <label for="specificInstructions" class="form-label">Specific Instructions (one per line)</label>
+                            <textarea id="specificInstructions" name="specificInstructions" rows="3" class="form-textarea" placeholder="e.g., Use functional components in React&#10;Prioritize performance&#10;Include error handling for API calls"></textarea>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-3 mt-6">
+                            <button type="submit" class="btn btn-primary-app btn-icon-text w-full sm:w-auto">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" /></svg>
+                                <span>Generate & Save Prompt</span>
+                            </button>
+                            <button type="button" id="clearFormButton" class="btn btn-secondary-app btn-icon-text w-full sm:w-auto">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                <span>Clear Form</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="md:w-1/3 lg:w-5/12 space-y-6 lg:space-y-8">
+                    <div class="content-card">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-semibold text-gray-800">Generated Prompt</h2>
+                            <button id="copyPromptButton" class="btn btn-secondary-app btn-icon-text px-3 py-1.5 text-xs">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                <span>Copy to Clipboard</span>
+                            </button>
+                        </div>
+                        <textarea id="generatedPromptTextarea" rows="10" class="form-textarea w-full bg-gray-50 text-sm" readonly placeholder="Your generated prompt will appear here..."></textarea>
+                    </div>
+
+                    <div class="content-card">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-4">Saved Prompts</h2>
+                        <div id="savedPromptsContainer" class="max-h-[26rem] overflow-y-auto space-y-2 pr-1">
+                            <p id="noPromptsMessage" class="text-gray-500 italic text-sm">No prompts saved yet. Create one to get started!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <footer class="text-center py-8 mt-auto">
+            <p class="text-sm text-gray-500">&copy; <span id="currentYear"></span> AI Prompt Generator. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        // --- Constants and DOM Elements ---
+        const promptForm = document.getElementById('promptForm');
+        const generatedPromptTextarea = document.getElementById('generatedPromptTextarea');
+        const copyPromptButton = document.getElementById('copyPromptButton');
+        const clearFormButton = document.getElementById('clearFormButton');
+        const savedPromptsContainer = document.getElementById('savedPromptsContainer');
+        const noPromptsMessage = document.getElementById('noPromptsMessage');
+        const messageContainer = document.getElementById('messageContainer');
+        const currentYearSpan = document.getElementById('currentYear');
+        const LOCAL_STORAGE_KEY = 'aiPromptGenTemplates';
+        let currentlyLoadedPromptId = null;
+
+        // --- Utility Functions ---
+        function generateUniqueId() {
+            return Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
+        }
+
+        function showMessage(text, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = text;
+            messageDiv.className = `message message-${type} opacity-0 transform translate-y-2 transition-all duration-300 ease-out`;
+            messageContainer.appendChild(messageDiv);
+            requestAnimationFrame(() => {
+                messageDiv.classList.remove('opacity-0', 'translate-y-2');
+                messageDiv.classList.add('opacity-100', 'translate-y-0');
+            });
+            setTimeout(() => {
+                messageDiv.classList.remove('opacity-100', 'translate-y-0');
+                messageDiv.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => messageDiv.remove(), 300);
+            }, 3500);
+        }
+
+        // --- localStorage Interaction ---
+        function loadPromptsFromLocal() {
+            try {
+                const promptsJson = localStorage.getItem(LOCAL_STORAGE_KEY);
+                return promptsJson ? JSON.parse(promptsJson) : [];
+            } catch (error) {
+                console.error("Error loading prompts from localStorage:", error);
+                showMessage("Error loading saved prompts. Data might be corrupted. Clearing data.", "error");
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+                return [];
+            }
+        }
+
+        function savePromptToLocal(promptObject) {
+            try {
+                const prompts = loadPromptsFromLocal();
+                prompts.unshift(promptObject);
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(prompts));
+                return true;
+            } catch (error) {
+                console.error("Error saving prompt to localStorage:", error);
+                if (error.name === 'QuotaExceededError' || (error.code && (error.code === 22 || error.code === 1014))) {
+                    showMessage("Storage full. Could not save prompt. Please delete old prompts or clear browser storage.", "error");
+                } else {
+                    showMessage("Error saving prompt. Please try again.", "error");
+                }
+                return false;
+            }
+        }
+        
+        function deletePromptFromLocal(promptId) {
+            try {
+                let prompts = loadPromptsFromLocal();
+                prompts = prompts.filter(p => p.id !== promptId);
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(prompts));
+                return true;
+            } catch (error) {
+                console.error("Error deleting prompt from localStorage:", error);
+                showMessage("Error deleting prompt.", "error");
+                return false;
+            }
+        }
+
+        // --- Prompt Generation and Display ---
+        function generatePromptText(data) {
+            const featuresList = (data.keyFeatures || '').split('\n').filter(f => f.trim() !== '').map(f => `- ${f.trim()}`).join('\n');
+            const instructionsList = (data.specificInstructions || '').split('\n').filter(i => i.trim() !== '').map(i => `- ${i.trim()}`).join('\n');
+            return `
+# AI Application Prompt: ${data.appType || 'Not Specified'}
+
+## 1. Core Definition
+- **Application Type/Name:** ${data.appType || 'Not Specified'}
+- **Main Objective:** ${data.appObjective || 'Not Specified'}
+- **Target Audience:** ${data.targetAudience || 'Not Specified'}
+
+## 2. Technical Stack
+- **Programming Language:** ${data.programmingLanguage || 'Not Specified'}
+- **Framework(s):** ${data.frameworks || 'Not Specified'}
+- **Key Libraries/Packages:** ${data.libraries || 'Not Specified'}
+- **Database:** ${data.database || 'Not Specified'}
+
+## 3. Scope and Structure
+- **Minimum Number of Files:** ${data.minFiles || 'Not Specified'}
+- **Maximum Number of Files:** ${data.maxFiles || 'Not Specified'}
+- **Key Features:**
+${featuresList || '  - Not Specified'}
+
+## 4. Design and Output
+- **UI/UX Style:** ${data.uiUxStyle || 'Not Specified'}
+- **Desired Output Format:** ${data.outputFormat || 'Not Specified'}
+- **Code Commenting Style:** ${data.commentStyle || 'Not Specified'}
+- **Deployment Target:** ${data.deploymentTarget || 'Not Specified'}
+
+## 5. Specific Instructions & Constraints
+${instructionsList || '  - Not Specified'}
+
+---
+Please generate the ${data.outputFormat ? data.outputFormat.toLowerCase() : 'output'} for the application described above.
+Ensure the response adheres to all specified constraints and requirements.
+            `.trim();
+        }
+
+        function displayGeneratedPrompt(promptText) {
+            generatedPromptTextarea.value = promptText;
+        }
+
+        // --- Saved Prompts Rendering ---
+        function renderSavedPrompts() {
+            const prompts = loadPromptsFromLocal();
+            savedPromptsContainer.innerHTML = ''; 
+
+            if (prompts.length === 0) {
+                savedPromptsContainer.appendChild(noPromptsMessage);
+                noPromptsMessage.style.display = 'block';
+            } else {
+                noPromptsMessage.style.display = 'none';
+                prompts.forEach((prompt) => {
+                    const card = document.createElement('div');
+                    card.className = 'prompt-card cursor-pointer focus-within:ring-1 focus-within:ring-blue-400 focus-within:ring-offset-1';
+                    if (prompt.id === currentlyLoadedPromptId) {
+                        card.classList.add('prompt-card-loaded');
+                    }
+                    card.setAttribute('tabindex', '0');
+                    
+                    card.innerHTML = `
+                        <div class="flex-grow">
+                            <h3 class="text-sm font-semibold text-gray-700 pointer-events-none">${prompt.appType || 'Untitled Prompt'}</h3>
+                            <p class="text-xs text-gray-500 pointer-events-none">Lang: ${prompt.programmingLanguage || 'N/A'} | Created: ${new Date(prompt.createdAt).toLocaleDateString()}</p>
+                        </div>
+                        <div class="ml-auto flex space-x-2 items-center flex-shrink-0">
+                            <button data-id="${prompt.id}" class="btn-load btn-card-action">Load</button>
+                            <button data-id="${prompt.id}" class="btn-delete text-xs text-red-500 hover:text-red-700 px-1.5 py-1 rounded-md hover:bg-red-50" title="Delete prompt">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
+                        </div>
+                    `;
+                    
+                    const loadButton = card.querySelector('.btn-load');
+                    const deleteButton = card.querySelector('.btn-delete');
+
+                    loadButton.addEventListener('click', (e) => { e.stopPropagation(); populateFormWithPrompt(prompt.id); showMessage("Prompt loaded into form.", "info"); });
+                    deleteButton.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const promptName = prompt.appType || "this prompt";
+                        if (confirm(`Are you sure you want to delete "${promptName}"? This action cannot be undone.`)) {
+                            if (deletePromptFromLocal(prompt.id)) {
+                                if(currentlyLoadedPromptId === prompt.id) { clearForm(false); currentlyLoadedPromptId = null; }
+                                renderSavedPrompts(); 
+                                showMessage(`Prompt "${promptName}" deleted.`, "success");
+                            }
+                        }
+                    });
+                    card.addEventListener('click', () => { populateFormWithPrompt(prompt.id); showMessage("Prompt loaded into form.", "info"); });
+                    card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); populateFormWithPrompt(prompt.id); showMessage("Prompt loaded.", "info"); } });
+                    savedPromptsContainer.appendChild(card);
+                });
+            }
+        }
+
+        function populateFormWithPrompt(promptId) {
+            const prompts = loadPromptsFromLocal();
+            const promptToLoad = prompts.find(p => p.id === promptId);
+
+            if (promptToLoad) {
+                Object.keys(promptToLoad).forEach(key => {
+                    if (promptForm.elements[key]) {
+                        promptForm.elements[key].value = promptToLoad[key] || (promptForm.elements[key].type === 'number' ? 1 : '');
+                    }
+                });
+                promptForm.elements.minFiles.value = promptToLoad.minFiles || 1;
+                promptForm.elements.maxFiles.value = promptToLoad.maxFiles || (promptToLoad.minFiles || 1);
+
+                displayGeneratedPrompt(promptToLoad.generatedPrompt);
+                currentlyLoadedPromptId = promptId;
+                renderSavedPrompts();
+                if (window.scrollY > 100) { // Scroll to top if form is not fully visible
+                    promptForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            } else {
+                showMessage("Could not find the selected prompt to load.", "error");
+                currentlyLoadedPromptId = null;
+                renderSavedPrompts();
+            }
+        }
+
+        // --- Event Handlers ---
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            const formData = new FormData(promptForm);
+            const data = Object.fromEntries(formData.entries());
+
+            if (parseInt(data.minFiles) > parseInt(data.maxFiles)) { showMessage("Min files cannot be greater than Max files.", "error"); return; }
+            if (parseInt(data.minFiles) < 1) { showMessage("Min files must be at least 1.", "error"); return; }
+
+            const generatedPrompt = generatePromptText(data);
+            displayGeneratedPrompt(generatedPrompt);
+
+            const promptObject = { id: generateUniqueId(), createdAt: new Date().toISOString(), ...data, generatedPrompt };
+            if (savePromptToLocal(promptObject)) {
+                currentlyLoadedPromptId = promptObject.id;
+                renderSavedPrompts();
+                showMessage("Prompt generated and saved successfully!", "success");
+            }
+        }
+
+        function copyToClipboard() {
+            if (!generatedPromptTextarea.value) { showMessage("Nothing to copy.", "info"); return; }
+            try {
+                generatedPromptTextarea.select();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(generatedPromptTextarea.value)
+                        .then(() => showMessage("Prompt copied to clipboard!", "success"))
+                        .catch(err => { console.error('Async copy failed: ', err); document.execCommand('copy'); showMessage("Copied (fallback method)!", "success"); });
+                } else { document.execCommand('copy'); showMessage("Copied (fallback method)!", "success"); }
+            } catch (err) { console.error('Copy failed: ', err); showMessage("Could not copy. Please copy manually.", "error"); }
+            if (window.getSelection) { window.getSelection().removeAllRanges(); } else if (document.selection) { document.selection.empty(); }
+        }
+        
+        function clearForm(showMsg = true) {
+            promptForm.reset();
+            generatedPromptTextarea.value = '';
+            if (currentlyLoadedPromptId) { currentlyLoadedPromptId = null; renderSavedPrompts(); }
+            if (showMsg) { showMessage("Form cleared.", "info"); }
+        }
+
+        // --- Initialization ---
+        function initApp() {
+            promptForm.addEventListener('submit', handleFormSubmit);
+            copyPromptButton.addEventListener('click', copyToClipboard);
+            clearFormButton.addEventListener('click', () => clearForm(true));
+            if(currentYearSpan) {
+                currentYearSpan.textContent = new Date().getFullYear();
+            }
+            renderSavedPrompts();
+        }
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
